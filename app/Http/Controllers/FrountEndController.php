@@ -74,16 +74,16 @@ class FrountEndController extends Controller
             // تحديث بيانات المستخدم
             $user->update([
                 'curret_profile_id' => $user->id,
-                'curret_profile_id_Bss' => null,
-                'current_my_travel' => null
+                'curret_profile_id_Bss' => '',
+                'current_my_travel' => ''
             ]);
 
             // جلب جميع بيانات المستخدم باستخدام الدالة المحسنة
-            $AllsDataProfileNow = $this->StartGetAllsDataProfileSmpl($user);
+            $AllsDataProfileNow = $this->StartGetAllsDataProfileSmpl($user)->getData();
 
             return response()->json([
                 'message' => 'successfuly Login For Your Accounte',
-                'data' => $AllsDataProfileNow->getData(), // الحصول على البيانات من ال response
+                'data' => $AllsDataProfileNow, // الحصول على البيانات من ال response
                 // 'data' => $AllsDataProfileNow, // الحصول على البيانات من ال response
                 'typAction' => 1,
                 'token' => $token
@@ -180,7 +180,6 @@ class FrountEndController extends Controller
             'city' => $Smplcity,
             'Gender' => $spmlGender,
             'data_of_birth' => $SmplDaOfBrith,
-            'country_code' => $SmpldialCode,
         ];
 
         if($request->hasFile('profileImage')) {
@@ -205,8 +204,8 @@ class FrountEndController extends Controller
             // تحديث بيانات المستخدم
             $user->update([
                 'curret_profile_id' => $user->id,
-                'curret_profile_id_Bss' => null,
-                'current_my_travel' => null
+                'curret_profile_id_Bss' => '',
+                'current_my_travel' => ''
             ]);
 
             // جلب جميع بيانات المستخدم باستخدام الدالة المحسنة
@@ -228,7 +227,78 @@ class FrountEndController extends Controller
     } //=== Start function register User ===//
     //=== Start Actions Login And Register New User ===//
 
+    // Start Show Date Profile User
+    function ProfileUserBess(Request $request) {
+        $MyProfileNow = Auth::user();
+        $idProfileBssNow = $MyProfileNow->curret_profile_id_Bss;
+        $ProfileBssLoginNow = Auth::user()->ProfileUserBss()->where('id', $idProfileBssNow)->first();
+        
+        if($ProfileBssLoginNow) {
+            $request->validate([
+                'usernameBss' => 'nullable|string',
+                'megaleBss' => 'nullable|string',
+                'gbsbss' => 'nullable|string',
+                'cantryBss' => 'nullable|string',
+
+            ]);
+
+            $user_id = $MyProfileNow->id;
+            $facebookLinck = strip_tags($request->facebookLinck);
+            $tiktokeLinck = strip_tags($request->tiktokeLinck);
+            $snabeshateLinck = strip_tags($request->snabeshateLinck);
+            $youtubeLinck = strip_tags($request->youtubeLinck);
+            $tewayteXLinck = strip_tags($request->tewayteXLinck);
+            $instagramLinck = strip_tags($request->instagramLinck);
+            $gbsbssLinck = strip_tags($request->gbsbssLinck);
+            $DatToUpdateProf = [];
+            $usernameBss = strip_tags($request->usernameBss);
+            $megaleBss = strip_tags($request->megaleBss);
+            $gbsbss = strip_tags($request->gbsbss);
+            $cantryBss = strip_tags($request->cantryBss);
+            // $SheckNameBss = ProfileUserBss::where('usernameBss', $usernameBss)->first();
+            // if($SheckNameBss) {
+            //     return response()->json([
+            //         'message' => 'This Name Besness Has One Releay Created For One User',
+            //         'data' => 7
+            //     ]);
+            // }
+            if($usernameBss != '') {
+                $DatToUpdateProf['usernameBss'] = $usernameBss;
+            } 
+            if($megaleBss != '') {
+                $DatToUpdateProf['megaleBss'] = $megaleBss;
+            } 
+            if($gbsbss != '') {
+                $DatToUpdateProf['gbsbss'] = $gbsbss;
+            }
+            if($cantryBss != '') {
+                $DatToUpdateProf['cantryBss'] = $cantryBss;
+            }
+            
+            $DAtaProfileUpd = $ProfileBssLoginNow->update($DatToUpdateProf);
+            if($DAtaProfileUpd) {
+                return response()->json([
+                    'message' => 'Data To UPDATE Profile User Bss ',
+                    'data' => 1,
+                ]);
+            } else {
+                return response()->json([
+                    'message' => 'Data To UPDATE Profile User Bss ',
+                    'data' => 2,
+                ]);
+            }
+
+        }
+
+    } //=== End Show Date Profile User ===//
+
+
     protected $NewAccounteUserConfirmed;
+
+    public function __construct(NewAccounteUserConfirmed $NewAccounteUserConfirmed)
+    {
+        $this->NewAccounteUserConfirmed = $NewAccounteUserConfirmed;
+    }
 
     // إرسال رمز التأكيد
     public function sendcodtocreatenewaccounte(Request $request)
@@ -379,8 +449,8 @@ class FrountEndController extends Controller
             // تحديث بيانات المستخدم
             $user->update([
                 'curret_profile_id' => $user->id,
-                'curret_profile_id_Bss' => null,
-                'current_my_travel' => null
+                'curret_profile_id_Bss' => '',
+                'current_my_travel' => ''
             ]);
 
             // جلب جميع بيانات المستخدم باستخدام الدالة المحسنة
@@ -624,6 +694,75 @@ class FrountEndController extends Controller
         }
     }
     //== Start Alls Action For Shange Email Profile ==//
+
+    // Start Show Date Profile User
+    function ProfileUserBessSocailMd(Request $request) {
+        try {
+            $MyProfileNow = Auth::user();
+            $idProfileBssNow = $MyProfileNow->curret_profile_id_Bss;
+            $ProfileBssLoginNow = $MyProfileNow->ProfileUserBss()->where('id', $idProfileBssNow)->first();
+            
+            if($ProfileBssLoginNow) {
+                $request->validate([
+                    'facebouckeLinck' => 'nullable|string',
+                    'TikTokeLinckSpm' => 'nullable|string',
+                    'InstagrameLinck' => 'nullable|string',
+                    'YoutubeLinckSpm' => 'nullable|string',
+                    'TewaterXlinck' => 'nullable|string',
+                    'instagramLinck' => 'nullable|string',
+                    'SnabeShateLinckSpm' => 'nullable|string',
+                ]);
+                $user_id = $MyProfileNow->id;
+                $facebookLinck = strip_tags($request->facebouckeLinck);
+                $tiktokeLinck = strip_tags($request->TikTokeLinckSpm);
+                $snabeshateLinck = strip_tags($request->SnabeShateLinckSpm);
+                $youtubeLinck = strip_tags($request->YoutubeLinckSpm);
+                $tewayteXLinck = strip_tags($request->TewaterXlinck);
+                $instagramLinck = strip_tags($request->InstagrameLinck); //SnabeShateLinck
+                
+                $DatToUpdateProf = [];
+                if($facebookLinck != '') {
+                    $DatToUpdateProf['facebookLinck'] = $facebookLinck;
+                } 
+                if($tiktokeLinck != '') {
+                    $DatToUpdateProf['tiktokeLinck'] = $tiktokeLinck;
+                } 
+                if($snabeshateLinck != '') {
+                    $DatToUpdateProf['snabeshateLinck'] = $snabeshateLinck;
+                }
+                if($youtubeLinck != '') {
+                    $DatToUpdateProf['youtubeLinck'] = $youtubeLinck;
+                }
+                if($tewayteXLinck != '') {
+                    $DatToUpdateProf['tewayteXLinck'] = $tewayteXLinck;
+                }
+                if($instagramLinck != '') {
+                    $DatToUpdateProf['instagramLinck'] = $instagramLinck;
+                }
+                
+                $DAtaProfileUpd = $ProfileBssLoginNow->update($DatToUpdateProf);
+                if($DAtaProfileUpd) {
+                    return response()->json([
+                        'message' => 'SucesseFuly Update Profile To SouCail Media ',
+                        'data' => 1
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => 'This Name Bessnese Hase One Error ',
+                        'data' => 2
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Sorry Not Can Send Message For Email And Is Found',
+                'data' => [],
+                'error' => $e,
+                'typAction' => 9,
+            ], 200);
+        }
+
+    } //=== End Show Date Profile User ===//
 
     // Start Show Date Profile User
     function StartUpdateProfileUser(Request $request) {
@@ -901,11 +1040,11 @@ class FrountEndController extends Controller
                 if($passwordHash) {
                     if(Hash::check($redPassword, $passwordHash)) {
                         $SheckThisName = $ProfileData->userCategory()->where([
-                            'idBss' => $SheckMyProfID,
+                            'IdBss' => $SheckMyProfID,
                             'category' => $categorName,
                         ])->select('id')->first();
                         if($SheckThisName) {
-                            $dataUpdate = $ProfileData->userCategory()->where('idBss', $SheckMyProfID)->select('id', 'category')->latest()->paginate(10);
+                            $dataUpdate = $ProfileData->userCategory()->where('IdBss', $SheckMyProfID)->select('id', 'category')->latest()->paginate(10);
                             return response()->json([
                                 'message' => 'This Category is On leary Created',
                                 'typAction' => 4,
@@ -917,14 +1056,14 @@ class FrountEndController extends Controller
                             'IdBss' => $SheckMyProfID,
                         ]);
                         if($categorydate) {
-                            $dataUpdate = $ProfileData->userCategory()->where('idBss', $SheckMyProfID)->select('id', 'category')->latest()->paginate(10);
+                            $dataUpdate = $ProfileData->userCategory()->where('IdBss', $SheckMyProfID)->select('id', 'category')->latest()->paginate(10);
                             return response()->json([
                                 'message' => 'seccuess Create Category',
                                 'typAction' => 1,
                                 'data' => $dataUpdate,
                             ],201);
                         } else {
-                            $dataUpdate = $ProfileData->userCategory()->where('idBss', $SheckMyProfID)->select('id', 'category')->latest()->paginate(10);
+                            $dataUpdate = $ProfileData->userCategory()->where('IdBss', $SheckMyProfID)->select('id', 'category')->latest()->paginate(10);
                             return response()->json([
                                 'message' => 'seccuess Create Category',
                                 'typAction' => 9,
@@ -1793,10 +1932,9 @@ class FrountEndController extends Controller
                 $currentpage = strip_tags($request->currentpagenone) * 10;
                 $MessageID = strip_tags($MessageID);
                 $MyId = $MyProfileNow->id;
-                $DataMyMessage = $MyProfileNow->MessageEghar()->where('id', $MessageID)->select('id', 'ConfirmedRelactionUserZeboune', 'TypeMessage', 'ConfirmedRelation', 'TypeRelationMessageUser')->first();
+                $DataMyMessage = $MyProfileNow->MessageEghar()->where('id', $MessageID)->select('user_id', 'id', 'ConfirmedRelactionUserZeboune', 'TypeMessage', 'ConfirmedRelation', 'TypeRelationMessageUser', 'idbss')->first();
                 
                 if($DataMyMessage) {
-                    
                     if($DataMyMessage->ConfirmedRelactionUserZeboune == 1) {
                         $DataUpd = $MyProfileNow->MessageEghar()->where('id', $MessageID)->select('id', 'titel', 'message', 'NameUserSendMessage', 'sheckMessage', 'TypeMessage', 'CloceMessage', 'created_at')->latest()->paginate($currentpage);
                         return response()->json([
@@ -1870,7 +2008,7 @@ class FrountEndController extends Controller
                 'message' => 'Sorry Not Can Send Message For Email And Is Found',
                 'data' => [],
                 'error' => $e,
-                'typAction' => 9,
+                'typAction' => 99,
             ], 200);
         }
     }// End Response For Confirmed My Message To Add In Zeboune Bss
@@ -1887,7 +2025,7 @@ class FrountEndController extends Controller
                 $MessageID = strip_tags($MessageID);
                 $MyId = Auth::user()->id;
                 $MyName = Auth::user()->username;
-                $DataMyMessage = Auth::user()->MessageEghar()->where('id', $MessageID)->first();
+                $DataMyMessage = Auth::user()->MessageEghar()->where('id', $MessageID)->select('user_id', 'id', 'ConfirmedRelactionUserZeboune', 'TypeMessage', 'ConfirmedRelation', 'TypeRelationMessageUser', 'idbss')->first();
                 
                 if($DataMyMessage) {
                     
@@ -2768,7 +2906,7 @@ class FrountEndController extends Controller
                 $MyZebouneForID = ZebouneForUser::where([
                     'usernameBss' => $SheckMyProfIDBss,
                     'id' => $IdZebouneSmlIClick
-                ])->select('id', 'username', 'numberPhone', 'NesbetReda', 'NesbetReda', 'TotelBayMent', 'created_at', 'image', 'TotelDeyn', 'HaletDeyn', 'TypeAccounte')->first();
+                ])->select('id', 'username', 'numberPhone', 'TotelBayMent', 'created_at', 'image', 'TotelDeyn', 'HaletDeyn', 'TypeAccounte')->first();
                 $TotelPaymentForZeboune = $ProfilNow->CurrentPaymentForUseBss->select('currentCantry')->first();
                 return response()->json([
                     'message' => 'from Show My Data Zeboune',
@@ -3112,8 +3250,8 @@ class FrountEndController extends Controller
                     }
                     $user->update([
                         'curret_profile_id' => $MyProfile->user_id,
-                        'curret_profile_id_Bss' => null,
-                        'current_my_travel' => null
+                        'curret_profile_id_Bss' => '',
+                        'current_my_travel' => ''
                     ]);
                     $AllsDataProfileNow = $this->StartGetAllsDataProfileSmpl();
                     $token = $user->createToken('user_token')->plainTextToken;
@@ -3133,8 +3271,8 @@ class FrountEndController extends Controller
                     }
                         $user->update([
                             'curret_profile_id_Bss' => $MyProfileBss->id,
-                            'curret_profile_id' => null,
-                            'current_my_travel' => null,
+                            'curret_profile_id' => '',
+                            'current_my_travel' => '',
                         ]);
                         
                         $AllsDataProfileNow = $this->GetAllsDataMyProfileBssNow();
@@ -3161,8 +3299,8 @@ class FrountEndController extends Controller
                     }
                     $user->update([
                         'current_my_travel' => $MyTravel->idbss,
-                        'curret_profile_id_Bss' => null,
-                        'curret_profile_id' => null,
+                        'curret_profile_id_Bss' => '',
+                        'curret_profile_id' => '',
                     ]);
                     
                     $AllsDataProfileNow = $this->GetAllsDataMyProfileTrave();
@@ -3175,6 +3313,41 @@ class FrountEndController extends Controller
                     ]);
                 }
             }
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Sorry Not Can Send Message For Email And Is Found',
+                'data' => [],
+                'error' => $e,
+                'typAction' => 99,
+            ], 200);
+        }
+    }
+
+    function ShowMyProfileLoginNow() {
+        try {
+            $MyProfileNow= Auth::user();
+            if($MyProfileNow->curret_profile_id) {
+                $MyProf = Auth::user()->ProfileUser()->where('user_id', $MyProfileNow->curret_profile_id)->first();
+                return response()->json([
+                    'message' => 'Sussefuly Login My Profile User',
+                    'TypeAcounte' => 'user',
+                ]);
+            } else if($MyProfileNow->curret_profile_id_Bss) {
+                $MyProf = Auth::user()->ProfileUserBss()->where('id', $MyProfileNow->curret_profile_id_Bss)->first();
+                return response()->json([
+                    'message' => 'Sussefuly Show My Profile Bss',
+                    'TypeAcounte' => 'bss',
+                ]);
+            } else {
+                $userup = User::where('id', $MyProfileNow->id)->update([
+                    'curret_profile_id' => $MyProfileNow->id,
+                    'curret_profile_id_Bss' => null
+                ]);
+            }
+            $userup = User::where('id', $MyProfileNow->id)->update([
+                'curret_profile_id' => $MyProfileNow->id,
+                'curret_profile_id_Bss' => null
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Sorry Not Can Send Message For Email And Is Found',
@@ -3276,7 +3449,7 @@ class FrountEndController extends Controller
                         'image' => $dat->img,
                         'nameTou' => $dat->price,
                         'nameThere' => $dat->totaleinstorage,
-                        'TypeActionNow' => $dat->TypePayprd === 1 ? "Active" : "DscActive",
+                        'TypeActionNow' => $dat->TypePayprd == 1 ? "Active" : "DscActive",
                         'TypeData' => 'Prodects',
                         'IdBss' => $dat->IdBss
                     ];
@@ -3294,10 +3467,11 @@ class FrountEndController extends Controller
                 $SpmlDataPaymentMethods = [];
                 foreach (json_decode($paymentsMethodsBss) as $index => $dat) {
                     $SpmlDataPaymentMethods[] = [
+                        'IdBss' => $dat->usernameBss,
                         'id' => $dat->id,
                         'nameOne' => $dat->namepayment,
                         'nameTou' => $dat->TypeNumberPay,
-                        'TypeActionNow' => $dat->TypeNumberPay === 1 ? "Active" : "DscActive",
+                        'TypeActionNow' => $dat->TypePayment == 1 ? "Active" : "DscActive",
                         'TypeData' => 'PaymentsMethods'
                     ];
                 }
@@ -3411,7 +3585,7 @@ class FrountEndController extends Controller
                 'usernameBss' => $SheckMyProfIDBss,
                 'TypeOrder' => 0,
                 ])->latest()->select('id')->count();
-            $MayZeboune = $MyDatUser->ZebouneForUser()->where([
+            $MayZeboune = ZebouneForUser::where([
                 'usernameBss' => $SheckMyProfIDBss,
                 'ConfirmedRelactionUserBss' => 1,
                 'ConfirmedRelactionUserZeboune' => 1,
@@ -3425,7 +3599,7 @@ class FrountEndController extends Controller
                     'image' => $dat->image,
                     'nameTou' => $dat->numberPhone,
                     'nameThere' => $dat->TotelDeyn,
-                    'TypeActionNow' => $dat->HaletDeyn === 1 ? "Active" : "DscActive",
+                    'TypeActionNow' => $dat->HaletDeyn == 1 ? "Active" : "DscActive",
                     'TypeData' => 'Zebouns'
                 ];
             }
@@ -3440,7 +3614,7 @@ class FrountEndController extends Controller
                     'image' => $dat->img,
                     'nameTou' => $dat->price,
                     'nameThere' => $dat->totaleinstorage,
-                    'TypeActionNow' => $dat->TypePayprd === 1 && $dat->totaleinstorage >= 1 ? "Active" : "DscActive",
+                    'TypeActionNow' => $dat->TypePayprd == 1 && $dat->totaleinstorage >= 1 ? "Active" : "DscActive",
                 ];
             }
             
@@ -3475,7 +3649,7 @@ class FrountEndController extends Controller
                         'nameOne' => $dat->namepayment,
                         'image' => '',
                         'nameTou' => $dat->TypeNumberPay,
-                        'TypeActionNow' => $dat->TypePayment === 1 ? "Active" : "DscActive",
+                        'TypeActionNow' => $dat->TypePayment == 1 ? "Active" : "DscActive",
                     ];
                 }
                 $MayCategory = $MyDatUser->UserCategory()->where('IdBss', $SheckMyProfIDBss)->latest()->select('id', 'category')->get();
@@ -3629,7 +3803,7 @@ class FrountEndController extends Controller
                     'image' => $dat->image,
                     'nameTou' => $dat->numberPhone,
                     'nameThere' => $dat->TotelDeyn,
-                    'TypeActionNow' => $dat->HaletDeyn === 1 ? "Active" : "DscActive",
+                    'TypeActionNow' => $dat->HaletDeyn == 1 ? "Active" : "DscActive",
                 ];
             }
             $MyPaymentProdectPay = PaymentProdectUserBss::where('IdBss', $SheckMyProfIDBssTv)->latest()->select('id', 'totalpriceprodectspay', 'namezeboune', 'allquantitelprodect', 'typepayment')->get();
@@ -3643,7 +3817,7 @@ class FrountEndController extends Controller
                     'image' => $dat->img,
                     'nameTou' => $dat->price,
                     'nameThere' => $dat->totaleinstorage,
-                    'TypeActionNow' => $dat->TypePayprd === 1 && $dat->totaleinstorage >= 1 ? "Active" : "DscActive",
+                    'TypeActionNow' => $dat->TypePayprd == 1 && $dat->totaleinstorage >= 1 ? "Active" : "DscActive",
                 ];
             }
             
@@ -3658,7 +3832,7 @@ class FrountEndController extends Controller
                         'nameOne' => $dat->namepayment,
                         'image' => '',
                         'nameTou' => $dat->TypeNumberPay,
-                        'TypeActionNow' => $dat->TypePayment === 1 ? "Active" : "DscActive",
+                        'TypeActionNow' => $dat->TypePayment == 1 ? "Active" : "DscActive",
                     ];
                 }
                 $MyProfileTraveSpm = $MyDatUser->EdaretMewevin()->where([
@@ -4198,11 +4372,31 @@ class FrountEndController extends Controller
                         'NamesPaymentmethod' => 'required|string',
                     ]);
                     $NamesPaymentmethod = strip_tags($request->NamesPaymentmethod);
-                    if($NamesPaymentmethod != 'CASH' && $NamesPaymentmethod != 'Selefe') {
+                    $NumbersPaymentmethod = strip_tags($request->NumbersPaymentmethod);
+                    if($NamesPaymentmethod == 'CASH' | $NamesPaymentmethod == 'Selefe') {
+                        $SheckPay = PaymentMethodUserBss::where([
+                            'usernameBss' => $SheckMyProfIDBss, 
+                            'namepayment' => $NamesPaymentmethod,
+                        ])->select('id', 'namepayment')->first();
+                        if($SheckPay != null && $SheckPay->namepayment == 'CASH' || $SheckPay != null &&  $SheckPay->namepayment == 'Selefe') {
+                            $dataUpt = PaymentMethodUserBss::where('usernameBss', $SheckMyProfIDBss)->select('id', 'namepayment', 'TypeNumberPay', 'TypePayment')->latest()->paginate(10);
+                            return response()->json([
+                                'message' => " Sorry Your Dont Have relation To Update This Payment ",
+                                'typAction' => 9,
+                                'data' => $dataUpt,
+                            ], 200);
+                        }
+                        $CreatePayment = PaymentMethodUserBss::create([
+                            'user_id' => $DataUser->id,
+                            'usernameBss' => $SheckMyProfIDBss,
+                            'namepayment' => $NamesPaymentmethod,
+                            'TypeNumberPay' => $NumbersPaymentmethod,
+                            'TypePayment' => 1,
+                        ]);
+                    } else {
                         $request->validate([
                             'NumbersPaymentmethod' => 'required|string',
                         ]);
-                        $NumbersPaymentmethod = strip_tags($request->NumbersPaymentmethod);
                         $SheckPay = PaymentMethodUserBss::where([
                             'usernameBss' => $SheckMyProfIDBss, 
                             'namepayment' => $NamesPaymentmethod,
@@ -4235,27 +4429,23 @@ class FrountEndController extends Controller
                             'TypeNumberPay' => strip_tags($NumbersPaymentmethod),
                             'TypePayment' => 1,
                         ]);
-                    } else {
-                        $SheckPay = PaymentMethodUserBss::where([
-                            'usernameBss' => $SheckMyProfIDBss, 
-                            'namepayment' => strip_tags($NamesPaymentmethod),
-                        ])->select('id', 'namepayment')->first();
-                        if($SheckPay->namepayment == 'CASH' || $SheckPay->namepayment == 'Selefe') {
-                            $dataUpt = PaymentMethodUserBss::where('usernameBss', $SheckMyProfIDBss)->select('id', 'namepayment', 'TypeNumberPay', 'TypePayment')->latest()->paginate(10);
-                            return response()->json([
-                                'message' => " Sorry Your Dont Have relation To Update This Payment ",
-                                'typAction' => 9,
-                                'data' => $dataUpt,
-                            ], 200);
-                        }
-                        $CreatePayment = PaymentMethodUserBss::create([
-                            'user_id' => strip_tags($user_id),
-                            'usernameBss' => strip_tags($SheckMyProfIDBss),
-                            'namepayment' => strip_tags($NamesPaymentmethod),
-                            'TypeNumberPay' => null,
-                            'TypePayment' => 1,
-                        ]);
                     }
+
+                    // $CreatePayment = PaymentMethodUserBss::create([
+                    //     'user_id' => $DataUser->id,
+                    //     'usernameBss' => $SheckMyProfIDBss,
+                    //     'namepayment' => $NamesPaymentmethod,
+                    //     'TypeNumberPay' => $NumbersPaymentmethod,
+                    //     'TypePayment' => 1,
+                    // ]);
+
+                    // $CreatePayment = PaymentMethodUserBss::create([
+                    //     'user_id' => strip_tags($DataUser->id),
+                    //     'usernameBss' => strip_tags($SheckMyProfIDBss),
+                    //     'namepayment' => strip_tags($NamesPaymentmethod),
+                    //     'TypeNumberPay' => '359090',
+                    //     'TypePayment' => 1,
+                    // ]);
 
                     if ($CreatePayment) {
                         return response()->json([
@@ -4772,7 +4962,7 @@ class FrountEndController extends Controller
                     'quantities' => 'required|array',
                     'quantities.*' => 'integer|min:1',
                     'PaymentMethod' => 'integer|exists:payment_method_user_bsses,id',
-                    'NamberZeboune' => 'required|integer|exists:zeboune_for_users,numberPhone',
+                    'NamberZeboune' => 'required|exists:zeboune_for_users,numberPhone',
                     'imagePayment' => 'nullable|image|mimes:jpeg,jpg|max:4000',
                 ]);
                 $currentPay = CurrentPaymentForUseBss::where('usernameBss', $spmlIdBssLoginNow)->select('currentCantry')->first();
@@ -4783,17 +4973,16 @@ class FrountEndController extends Controller
                 $NamePerodectPay = [];
                 $IDsPerodectPay = [];
                 $TotelPrices = 0;
-                try {
+                $ValQuanteOne = $request->quantities;
+                try { //productID
                     DB::beginTransaction();
                     $totalPrice = 0;
                     $PricePerodectPay = [];
                     $totalquantite = 0;
-                    $ValQuanteOne = $request->quantities;
                     $PaymentMethod = PaymentMethodUserBss::where([
                         'usernameBss' => $spmlIdBssLoginNow,
                         'id' => strip_tags($request->PaymentMethod),
                     ])->select('id', 'namepayment', 'TypeNumberPay')->first();
-                    
                     foreach ($request->productID as $index => $productId) {
                         $product = ProdectUser::lockForUpdate()->find($productId);
                         if (!$product) {
@@ -4896,6 +5085,7 @@ class FrountEndController extends Controller
                         $image->move($location,$name);
                         $PaymentUpdate['imgconfirmedpay'] = $source;
                     }
+                // return response()->json(['dat' => 'Ok New', 'dat M' => $PaymentUpdate,]);
                     $ConfirmedUpdatePayment = PaymentProdectUserBss::create($PaymentUpdate);
                     if($ConfirmedUpdatePayment) {
                         $MyZeboune->increment('TotelBayMent', 1);
@@ -5109,7 +5299,7 @@ class FrountEndController extends Controller
                 'message' => 'Sorry Not Can Send Message For Email And Is Found',
                 'data' => [],
                 'error' => $e,
-                'typAction' => 99,
+                'typAction' => 999,
             ], 200);
         }
     } //=== End To Store Noew Prodect Data ==//
@@ -5802,10 +5992,9 @@ class FrountEndController extends Controller
                     'IDBss' => 'required|integer',
                     'idsergetOrder' => 'nullable|string',
                     'PaymentMethod' => 'integer|exists:payment_method_user_bsses,id',
-                    'nameusergetorder' => 'nullable|string',
                     'imagePayment' => 'nullable|image|mimes:jpeg,jpg|max:4000',
                 ]);
-                $bssiD = strip_tags($request->IDBss);
+                $bssiD = strip_tags($request->IDBss); //nameUserBss
                 $PaymentMethodSpl = strip_tags($request->PaymentMethod);
                 $MyData = $user->ZebouneForUser()->where([
                     'usernameBss' => $bssiD,
@@ -5880,7 +6069,7 @@ class FrountEndController extends Controller
                         $PaymentUpdate = [
                             'user_id' => $user->id,
                             'allquantitelprodect' => $Totelquat,
-                            'idusergetorder' => $user->id,
+                            // 'idusergetorder' => $user->id,
                             'usernameBss' => $bssiD,
                             'namezeboune' => $MyData->username,
                             'typeorderforzeboune' => 0,
@@ -6885,7 +7074,7 @@ class FrountEndController extends Controller
                                 }
                             } else {
 
-                                if ($SheckSlahya->PaymentEcteronect !== 1) {
+                                if ($SheckSlahya->PaymentEcteronect != 1) {
                                     return response()->json([
                                         'message' => 'Sorry YOU dont Have Relation slahiyate Payment Elect',
                                         'typAction' => 13,
@@ -7615,7 +7804,7 @@ class FrountEndController extends Controller
                                     ])->select('id', 'numberMewve', 'nameMewve', 'typerelation', 'edartPaymentProdects', 'edartOreders', 'edartemaney', 'PaymentEcteronect', 'Ratibe', 'curent')->latest()->paginate(10);
                                     return response()->json([
                                         'message' => "SuccessFuly Send Again Message For Add User One Teweve",
-                                        'typAction' => 16,
+                                        'typAction' => 1,
                                         'data' => $datupdat,
                                     ], 200);
                                 } else {
@@ -9084,7 +9273,7 @@ class FrountEndController extends Controller
             ])
             ->join('profile_user_bsses', 'edaret_mewevins.idbss', 'profile_user_bsses.id')
             ->select('profile_user_bsses.*')
-            ->latest()->first();
+            ->latest()->first(); //idTweve
             if($MyProfileBss || $MyProfileTrave) {
                 $request->validate([
                     'totalePaye' => 'required|integer',

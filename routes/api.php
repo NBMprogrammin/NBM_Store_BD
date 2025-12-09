@@ -1,5 +1,5 @@
 <?php
-use App\Http\Controllers\FrountEndController;
+use App\http\Controllers\FrountEndController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
