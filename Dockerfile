@@ -46,7 +46,7 @@ RUN chown -R www-data:www-data /var/www/html/storage \
 
 
 RUN composer  install
-RUN npm install
+# RUN npm install
 # Expose port
 EXPOSE 80
 
