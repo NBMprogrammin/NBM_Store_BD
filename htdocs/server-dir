@@ -1,6 +1,5 @@
-name: Deploy to InfinityFree
+name: Deploy Laravel to InfinityFree
 
-# Run manually or on push to the main branch
 on:
     workflow_dispatch:
     push:
@@ -9,21 +8,95 @@ on:
 
 jobs:
     deploy:
-        name: Deploy via FTP
+        name: 🚀 Build and Deploy
         runs-on: ubuntu-latest
 
         steps:
-            # Step 1: Clone the latest code from GitHub
-            - name: Get latest code
+            # الخطوة 1: Clone الكود
+            - name: 📥 Checkout code
               uses: actions/checkout@v4
 
-            # Step 2: Upload code via FTP
-            - name: Deploy to InfinityFree via FTP
+            # الخطوة 2: إعداد PHP
+            - name: ⚙️ Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.2" # InfinityFree يدعم حتى 8.2
+                  extensions: mbstring, xml, ctype, iconv, intl, pdo, mysql, bcmath, openssl, tokenizer
+                  tools: composer:v2
+
+            # الخطوة 3: إصلاح composer.json للتوافق مع PHP 8.2
+            - name: 🔧 Fix Dependencies Compatibility
+              run: |
+                  # تأكد من أن Laravel متوافق مع PHP 8.2
+                  if grep -q '"laravel/framework": "^12.0"' composer.json; then
+                    echo "⚠️ Laravel 12 requires PHP 8.3+, downgrading to Laravel 11..."
+                    sed -i 's/"laravel/framework": "^12.0"/"laravel/framework": "^11.0"/' composer.json
+                    sed -i 's/"laravel/sanctum": "^4.2"/"laravel/sanctum": "^3.5"/' composer.json
+                  fi
+
+                  # تأكد من PHP 8.2
+                  sed -i 's/"php": "^8.3"/"php": "^8.2"/' composer.json || true
+                  sed -i 's/"php": "^8.2.0"/"php": "^8.2"/' composer.json || true
+
+            # الخطوة 4: تثبيت dependencies
+            - name: 📦 Install Composer Dependencies
+              run: |
+                  rm -f composer.lock
+                  composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+                  # إذا فشل، جرب update
+                  composer update --no-interaction --prefer-dist --optimize-autoloader --no-scripts || true
+
+            # الخطوة 5: إعداد Laravel
+            - name: 🛠️ Setup Laravel
+              run: |
+                  cp .env.example .env
+                  php artisan key:generate
+                  php artisan config:clear
+                  php artisan cache:clear
+
+                  # صلاحيات المجلدات
+                  mkdir -p storage/framework/{sessions,views,cache}
+                  chmod -R 775 storage bootstrap/cache
+
+            # الخطوة 6: بناء Assets (إذا كان لديك npm)
+            - name: 🎨 Build Assets (Optional)
+              run: |
+                  if [ -f "package.json" ]; then
+                    npm ci --no-audit --prefer-offline
+                    npm run build
+                  else
+                    echo "No package.json found, skipping npm build"
+                  fi
+
+            # الخطوة 7: رفع الملفات عبر FTP
+            - name: ☁️ Deploy via FTP
               uses: SamKirkland/FTP-Deploy-Action@v4.3.5
               with:
-                  server: ftpupload.net
-                  username: if0_40642021
-                  password: 41wfqx9y
-                  server-dir: nbmstoregdb.42web.io # For addon domains
-                  timeout: 86400000
-                  log-level: standard
+                  server: ${{ secrets.FTP_SERVER }} # مثل: ftpupload.net
+                  username: ${{ secrets.FTP_USERNAME }} # مثل: if0_40642021
+                  password: ${{ secrets.FTP_PASSWORD }} # ⚠️ استخدم Secrets!
+                  server-dir: ./htdocs/ # ⚠️ هذا مهم لـ InfinityFree
+                  local-dir: ./
+                  exclude: |
+                      **/.git*
+                      **/.github*
+                      **/node_modules/*
+                      **/tests/*
+                      **/vendor/*
+                      .env
+                      .env.example
+                      composer.json
+                      composer.lock
+                      package.json
+                      package-lock.json
+                      README.md
+                      storage/*
+                      !storage/framework/
+                      !storage/framework/sessions/
+                      !storage/framework/views/
+                      !storage/framework/cache/
+                      *.sqlite
+                      *.log
+                      phpunit.xml
+                  dangerous-clean-slate: false
+                  timeout: 120000
