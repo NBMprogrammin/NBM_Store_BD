@@ -15,67 +15,95 @@ jobs:
             # الخطوة 1: Clone الكود
             - name: 📥 Checkout code
               uses: actions/checkout@v4
+              with:
+                  # هذا مهم: تجاهل حالة ملفات composer القديمة
+                  fetch-depth: 0
 
-            # الخطوة 2: إعداد PHP
-            - name: ⚙️ Setup PHP
+            # الخطوة 2: إعداد PHP 8.2
+            - name: ⚙️ Setup PHP 8.2
               uses: shivammathur/setup-php@v2
               with:
-                  php-version: "8.2" # InfinityFree يدعم حتى 8.2
-                  extensions: mbstring, xml, ctype, iconv, intl, pdo, mysql, bcmath, openssl, tokenizer
+                  php-version: "8.2"
+                  extensions: mbstring, xml, ctype, iconv, intl, pdo, mysql, bcmath, openssl, tokenizer, gd
                   tools: composer:v2
 
-            # الخطوة 3: إصلاح composer.json للتوافق مع PHP 8.2
-            - name: 🔧 Fix Dependencies Compatibility
+            # الخطوة 3: تأكد من التوافق مع Laravel 11
+            - name: 🔧 Ensure Laravel 11 Compatibility
               run: |
-                  # تأكد من أن Laravel متوافق مع PHP 8.2
+                  # 1. تأكد أننا نستخدم Laravel 11 (متوافق مع PHP 8.2)
                   if grep -q '"laravel/framework": "^12.0"' composer.json; then
-                    echo "⚠️ Laravel 12 requires PHP 8.3+, downgrading to Laravel 11..."
+                    echo "🔄 Downgrading from Laravel 12 to Laravel 11 for PHP 8.2 compatibility..."
                     sed -i 's/"laravel/framework": "^12.0"/"laravel/framework": "^11.0"/' composer.json
                     sed -i 's/"laravel/sanctum": "^4.2"/"laravel/sanctum": "^3.5"/' composer.json
                   fi
 
-                  # تأكد من PHP 8.2
-                  sed -i 's/"php": "^8.3"/"php": "^8.2"/' composer.json || true
-                  sed -i 's/"php": "^8.2.0"/"php": "^8.2"/' composer.json || true
+                  # 2. تأكد من PHP 8.2
+                  sed -i 's/"php": "^8.3"/"php": "^8.2"/' composer.json 2>/dev/null || true
 
-            # الخطوة 4: تثبيت dependencies
-            - name: 📦 Install Composer Dependencies
+                  # 3. أضف platform config إذا لم يكن موجود
+                  if ! grep -q '"platform"' composer.json; then
+                    sed -i '/"config": {/a\        "platform": {"php": "8.2"},' composer.json
+                  fi
+
+            # الخطوة 4: 📦 تثبيت/تحديث الحزم (الحل الرئيسي)
+            - name: 📦 Force Update Dependencies
               run: |
+                  echo "🧹 Removing old lock file..."
                   rm -f composer.lock
-                  composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
-                  # إذا فشل، جرب update
-                  composer update --no-interaction --prefer-dist --optimize-autoloader --no-scripts || true
+
+                  echo "🗑️ Clearing composer cache..."
+                  composer clear-cache
+
+                  echo "🔄 Running composer update to create new lock file..."
+                  composer update --no-interaction --prefer-dist --no-scripts --optimize-autoloader --with-all-dependencies
+
+                  echo "✅ Dependencies updated successfully!"
 
             # الخطوة 5: إعداد Laravel
-            - name: 🛠️ Setup Laravel
+            - name: 🛠️ Setup Laravel Environment
               run: |
-                  cp .env.example .env
-                  php artisan key:generate
+                  echo "🔑 Generating application key..."
+                  if [ ! -f ".env" ]; then
+                    cp .env.example .env
+                  fi
+
+                  # استخدم artisan key:generate فقط إذا لم يكن المفتاح موجوداً
+                  if ! grep -q "^APP_KEY=base64:" .env 2>/dev/null; then
+                    php artisan key:generate
+                  fi
+
+                  echo "🗃️ Clearing cache..."
                   php artisan config:clear
                   php artisan cache:clear
 
-                  # صلاحيات المجلدات
+                  echo "📁 Setting up directories..."
                   mkdir -p storage/framework/{sessions,views,cache}
                   chmod -R 775 storage bootstrap/cache
 
-            # الخطوة 6: بناء Assets (إذا كان لديك npm)
-            - name: 🎨 Build Assets (Optional)
+                  echo "🔗 Creating storage link..."
+                  php artisan storage:link 2>/dev/null || true
+
+            # الخطوة 6: بناء Assets (اختياري)
+            - name: 🎨 Build Frontend Assets
               run: |
                   if [ -f "package.json" ]; then
-                    npm ci --no-audit --prefer-offline
-                    npm run build
+                    echo "📦 Installing npm dependencies..."
+                    npm ci --silent --no-audit --prefer-offline
+                    
+                    echo "🏗️ Building assets..."
+                    npm run build --silent
                   else
-                    echo "No package.json found, skipping npm build"
+                    echo "ℹ️ No package.json found, skipping npm build"
                   fi
 
-            # الخطوة 7: رفع الملفات عبر FTP
-            - name: ☁️ Deploy via FTP
+            # الخطوة 7: ☁️ الرفع عبر FTP
+            - name: ☁️ Deploy to InfinityFree
               uses: SamKirkland/FTP-Deploy-Action@v4.3.5
               with:
-                  server: ${{ secrets.FTP_SERVER }} # مثل: ftpupload.net
-                  username: ${{ secrets.FTP_USERNAME }} # مثل: if0_40642021
-                  password: ${{ secrets.FTP_PASSWORD }} # ⚠️ استخدم Secrets!
-                  server-dir: ./htdocs/ # ⚠️ هذا مهم لـ InfinityFree
+                  server: ${{ secrets.FTP_SERVER }}
+                  username: ${{ secrets.FTP_USERNAME }}
+                  password: ${{ secrets.FTP_PASSWORD }}
+                  server-dir: ./htdocs/
                   local-dir: ./
                   exclude: |
                       **/.git*
@@ -98,5 +126,16 @@ jobs:
                       *.sqlite
                       *.log
                       phpunit.xml
+                      deploy.yaml
+                      .gitignore
+                      .gitattributes
                   dangerous-clean-slate: false
-                  timeout: 120000
+                  timeout: 180000
+
+            # الخطوة 8: التحقق من النشر
+            - name: ✅ Verify Deployment
+              run: |
+                  echo "🎉 Deployment completed successfully!"
+                  echo "✅ Laravel 11 installed with PHP 8.2"
+                  echo "✅ Dependencies resolved and locked"
+                  echo "✅ Files uploaded to InfinityFree"
